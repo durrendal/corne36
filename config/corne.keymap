@@ -1,0 +1,110 @@
+/*
+ * Corne 3x5+3 (36-key) keymap — Ergodox-inspired
+ *
+ * Layers:
+ *   0  BASE   QWERTY with home-row mods (hold A/S/D/F = GUI/Alt/Ctrl/Shift)
+ *   1  LOWER  Numbers + navigation (arrows on home row right)
+ *   2  RAISE  Symbols + brackets
+ *   3  ADJUST Function keys, Bluetooth, media  (hold LOWER+RAISE)
+ *
+ * Thumb cluster (left | right):
+ *   ESC   LOWER  SPACE | ENTER  RAISE  BSPC
+ */
+
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/rgb.h>
+
+#define BASE   0
+#define LOWER  1
+#define RAISE  2
+#define ADJUST 3
+
+/ {
+    behaviors {
+        // Home-row mod: tap = letter, hold = modifier.
+        // "tap-preferred" + prior-idle timing keeps fast typing clean.
+        hm: homerow_mods {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            tapping-term-ms = <220>;
+            quick-tap-ms = <175>;
+            require-prior-idle-ms = <125>;
+            flavor = "tap-preferred";
+            bindings = <&kp>, <&kp>;
+        };
+    };
+
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+        tri_layer {
+            if-layers = <LOWER RAISE>;
+            then-layer = <ADJUST>;
+        };
+    };
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        // -----------------------------------------------------------------------------------------
+        // |   -   |  Q  |  W  |  E  |  R  |  T  |   |  Y  |  U  |  I  |  O  |  P  |   -   |
+        // |   -   | A/⌘ | S/⌥ | D/^ | F/⇧ |  G  |   |  H  | J/⇧ | K/^ | L/⌥ | ;/⌘ |   -   |
+        // |   -   |  Z  |  X  |  C  |  V  |  B  |   |  N  |  M  |  ,  |  .  |  /  |   -   |
+        //                     | ESC |LOWR | SPC |   | RET |RAIS |BSPC |
+        base_layer {
+            bindings = <
+&none   &kp Q       &kp W       &kp E        &kp R        &kp T          &kp Y    &kp U        &kp I        &kp O       &kp P             &none
+&none   &hm LGUI A  &hm LALT S  &hm LCTRL D  &hm LSHFT F  &kp G          &kp H    &hm RSHFT J  &hm RCTRL K  &hm RALT L  &hm RGUI SEMI     &none
+&none   &kp Z       &kp X       &kp C        &kp V        &kp B          &kp N    &kp M        &kp COMMA    &kp DOT     &kp FSLH          &none
+                                &kp ESC      &mo LOWER    &kp SPACE      &kp RET  &mo RAISE    &kp BSPC
+            >;
+        };
+
+        // Numbers on top row, nav cluster under the right hand (like Ergodox).
+        // |   -   |  1  |  2  |  3  |  4  |  5  |   |  6  |  7  |  8  |  9  |  0  |   -   |
+        // |   -   | TAB |HOME |PGDN |PGUP | END |   | LEFT|DOWN | UP  |RIGHT|  '  |   -   |
+        // |   -   |  \  |     |     |     |     |   |     |     |     |     |     |   -   |
+        //                     |     |     |     |   |     |     | DEL |
+        lower_layer {
+            bindings = <
+&none   &kp N1      &kp N2      &kp N3       &kp N4       &kp N5         &kp N6   &kp N7       &kp N8       &kp N9      &kp N0            &none
+&none   &kp TAB     &kp HOME    &kp PG_DN    &kp PG_UP    &kp END        &kp LEFT &kp DOWN     &kp UP       &kp RIGHT   &kp SQT           &none
+&none   &kp BSLH    &trans      &trans       &trans       &trans         &trans   &trans       &trans       &trans      &trans            &none
+                                &trans       &trans       &trans         &trans   &trans       &kp DEL
+            >;
+        };
+
+        // Shifted numbers on top row, brackets + dashes on home row.
+        // |   -   |  !  |  @  |  #  |  $  |  %  |   |  ^  |  &  |  *  |  (  |  )  |   -   |
+        // |   -   |  `  |  ~  |  -  |  =  |  +  |   |  {  |  }  |  [  |  ]  |  |  |   -   |
+        // |   -   |     |     |     |     |     |   |     |     |     |     |  \  |   -   |
+        //                     |     |     |     |   |     |     |     |
+        raise_layer {
+            bindings = <
+&none   &kp EXCL    &kp AT      &kp HASH     &kp DLLR     &kp PRCNT      &kp CARET &kp AMPS    &kp ASTRK    &kp LPAR    &kp RPAR          &none
+&none   &kp GRAVE   &kp TILDE   &kp MINUS    &kp EQUAL    &kp PLUS       &kp LBRC  &kp RBRC    &kp LBKT     &kp RBKT    &kp PIPE          &none
+&none   &trans      &trans      &trans       &trans       &trans         &trans    &trans      &trans       &trans      &kp BSLH          &none
+                                &trans       &trans       &trans         &trans    &trans      &trans
+            >;
+        };
+
+        // F-keys, Bluetooth profile switching, media controls, RGB.
+        // Activated by holding LOWER + RAISE together.
+        // |   -   | F1  | F2  | F3  | F4  | F5  |   | F6  | F7  | F8  | F9  | F10 |   -   |
+        // |   -   |BT 0 |BT 1 |BT 2 |BT 3 |BT 4 |   | F11 | F12 |VOL- |VOL+ |MUTE |   -   |
+        // |   -   |BTCLR|RGBTG|RGB- |RGB+ |RGBFX|   |RGBHU|PREV |PLAY |NEXT |     |   -   |
+        //                     |     |     |     |   |     |     |     |
+        //
+        // RGBTG = toggle on/off    RGB- / RGB+ = brightness down / up
+        // RGBFX = cycle effect     RGBHU       = cycle hue (color)
+        adjust_layer {
+            bindings = <
+&none   &kp F1          &kp F2          &kp F3          &kp F4          &kp F5              &kp F6              &kp F7     &kp F8        &kp F9        &kp F10       &none
+&none   &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2    &bt BT_SEL 3    &bt BT_SEL 4        &kp F11             &kp F12    &kp C_VOL_DN  &kp C_VOL_UP  &kp C_MUTE    &none
+&none   &bt BT_CLR      &rgb_ug RGB_TOG &rgb_ug RGB_BRD &rgb_ug RGB_BRI &rgb_ug RGB_EFF     &rgb_ug RGB_HUI     &kp C_PREV &kp C_PP      &kp C_NEXT    &trans        &none
+                                        &trans          &trans          &trans              &trans              &trans     &trans
+            >;
+        };
+    };
+};
